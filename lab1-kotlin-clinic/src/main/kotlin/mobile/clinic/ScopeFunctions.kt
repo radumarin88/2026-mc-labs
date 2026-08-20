@@ -24,7 +24,11 @@ class RequestConfig {
  * Set host = [host], port = [port], and add one header "x-device: $deviceId".
  */
 fun buildConfig(host: String, port: Int?, deviceId: String): RequestConfig =
-    TODO()
+    RequestConfig().apply {
+        this.host = host
+        this.port = port
+        headers.add("x-device: $deviceId")
+    }
 
 /**
  * Render a config into a URL string. Use `let` so the port only contributes when non-null:
@@ -32,7 +36,8 @@ fun buildConfig(host: String, port: Int?, deviceId: String): RequestConfig =
  *   port null    -> "scheme://host"
  */
 fun RequestConfig.toUrl(): String {
-    TODO()
+    val authority = port?.let { "$host:$it" } ?: host
+    return "$scheme://$authority"
 }
 
 /**
@@ -40,4 +45,4 @@ fun RequestConfig.toUrl(): String {
  * "sent:$url" to [log], then return the url unchanged.
  */
 fun sendAndLog(url: String, log: MutableList<String>): String =
-    TODO()
+    url.also { log.add("sent:$it") }

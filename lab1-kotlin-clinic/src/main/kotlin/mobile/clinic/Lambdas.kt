@@ -15,7 +15,11 @@ package mobile.clinic
  * Return how many elements match [predicate]. Do NOT call the stdlib `count`: write the loop.
  */
 fun <T> List<T>.countMatching(predicate: (T) -> Boolean): Int {
-    TODO()
+    var n = 0
+    for (element in this) {
+        if (predicate(element)) n++
+    }
+    return n
 }
 
 /**
@@ -24,7 +28,10 @@ fun <T> List<T>.countMatching(predicate: (T) -> Boolean): Int {
  * Stop as soon as it succeeds and return the successful attempt number; return -1 if all fail.
  */
 fun retryUntilSuccess(maxAttempts: Int, attempt: (Int) -> Boolean): Int {
-    TODO()
+    for (i in 1..maxAttempts) {
+        if (attempt(i)) return i
+    }
+    return -1
 }
 
 /**
@@ -35,4 +42,4 @@ fun retryUntilSuccess(maxAttempts: Int, attempt: (Int) -> Boolean): Int {
  * Example: buildRoute("api") { append("/v1"); append("/notes") }  ->  "/api/v1/notes"
  */
 fun buildRoute(base: String, build: StringBuilder.() -> Unit): String =
-    TODO()
+    StringBuilder("/$base").apply(build).toString()

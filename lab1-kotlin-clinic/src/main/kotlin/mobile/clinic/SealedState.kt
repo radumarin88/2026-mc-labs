@@ -28,8 +28,12 @@ sealed interface UiState<out T> {
  * read `it.data`; in Error you can read `it.message`).
  */
 fun <T> UiState<T>.render(): String =
-    TODO()
+    when (this) {
+        is UiState.Loading -> "loading…"
+        is UiState.Success -> "ok: ${this.data}"
+        is UiState.Error -> "error: ${this.message}"
+    }
 
 /** Return the data if this is Success, otherwise null. Systems: a caller that can degrade. */
 fun <T> UiState<T>.dataOrNull(): T? =
-    TODO()
+    (this as? UiState.Success)?.data

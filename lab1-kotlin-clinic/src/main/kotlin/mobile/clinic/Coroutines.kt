@@ -25,7 +25,9 @@ import kotlinx.coroutines.withTimeoutOrNull
  * throws, the scope cancels the other. This is offloading + fan-out in three lines.
  */
 suspend fun sumInParallel(a: suspend () -> Int, b: suspend () -> Int): Int = coroutineScope {
-    TODO()
+    val da = async { a() }
+    val db = async { b() }
+    da.await() + db.await()
 }
 
 /**
@@ -36,4 +38,4 @@ suspend fun sumInParallel(a: suspend () -> Int, b: suspend () -> Int): Int = cor
  * app and a spinner that never ends when connectivity drops.
  */
 suspend fun <T> awaitOrFallback(timeoutMs: Long, fallback: T, block: suspend () -> T): T =
-    TODO()
+    withTimeoutOrNull(timeoutMs) { block() } ?: fallback

@@ -18,7 +18,7 @@ interface Clock {
 
 /** A deterministic Clock for tests, always returns [fixed]. */
 class FixedClock(private val fixed: Long) : Clock {
-    override fun nowMs(): Long = TODO()
+    override fun nowMs(): Long = fixed
 }
 
 /**
@@ -30,11 +30,11 @@ class EventBuffer {
 
     /** Read-only view of recorded events (callers cannot mutate the buffer through this). */
     val events: List<String>
-        get() = TODO()
+        get() = _events.toList()
 
     /** Append [event] to the buffer. */
     fun record(event: String) {
-        TODO()
+        _events.add(event)
     }
 }
 
@@ -46,4 +46,4 @@ data class Session(val id: String, val user: String, val startedMs: Long)
  * Demonstrates dependency inversion (Clock) + immutable transition (copy).
  */
 fun renew(session: Session, clock: Clock): Session =
-    TODO()
+    session.copy(startedMs = clock.nowMs())

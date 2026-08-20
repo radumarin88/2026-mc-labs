@@ -28,15 +28,15 @@ data class SyncState(
 
 /** Transition: a sync just began. Return a NEW state with isSyncing = true (do not mutate). */
 fun SyncState.startSync(): SyncState =
-    TODO()
+    copy(isSyncing = true)
 
 /**
  * Transition: a sync just finished successfully at [nowMs]. Return a NEW state that is no
  * longer syncing, has zero pending items, and records the timestamp.
  */
 fun SyncState.completeSync(nowMs: Long): SyncState =
-    TODO()
+    copy(isSyncing = false, pendingCount = 0, lastSyncEpochMs = nowMs)
 
 /** Transition: [n] new items were queued while offline. Return a NEW state with them added. */
 fun SyncState.enqueue(n: Int): SyncState =
-    TODO()
+    copy(pendingCount = pendingCount + n)

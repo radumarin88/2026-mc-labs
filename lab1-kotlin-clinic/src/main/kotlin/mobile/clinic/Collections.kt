@@ -25,23 +25,34 @@ data class Reading(
  * and return just their values.
  */
 fun freshValues(readings: List<Reading>, nowMs: Long, maxAgeMs: Long): List<Double> =
-    TODO()
+    readings
+        .filter { nowMs - it.epochMs <= maxAgeMs }
+        .sortedBy { it.epochMs }
+        .map { it.value }
 
 /**
  * CONCLUDE per group. Average value per sensor type.
  * e.g. {"temp" -> 21.5, "humidity" -> 40.0}.
  */
 fun averageByType(readings: List<Reading>): Map<String, Double> =
-    TODO()
+    readings
+        .groupBy { it.type }
+        .mapValues { (_, group) -> group.map { it.value }.average() }
 
 /**
  * The latest reading per sensor id (max epochMs within each sensor's group).
  */
 fun latestPerSensor(readings: List<Reading>): Map<String, Reading> =
-    TODO()
+    readings
+        .groupBy { it.sensorId }
+        .mapValues { (_, group) -> group.maxByOrNull { it.epochMs }!! }
 
 /**
  * The most frequently reported type, or null if there are no readings.
  */
 fun mostCommonType(readings: List<Reading>): String? =
-    TODO()
+    readings
+        .groupingBy { it.type }
+        .eachCount()
+        .maxByOrNull { it.value }
+        ?.key

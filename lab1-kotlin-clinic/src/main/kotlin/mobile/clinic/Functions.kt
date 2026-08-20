@@ -15,7 +15,7 @@ package mobile.clinic
  * greet("Ada", "Hi") -> "Hi, Ada". No overloads needed.
  */
 fun greet(name: String, greeting: String = "Hello"): String =
-    TODO()
+    "$greeting, $name"
 
 /**
  * EXTENSION function on Int: clamp any value into a valid percentage 0..100.
@@ -23,7 +23,7 @@ fun greet(name: String, greeting: String = "Hello"): String =
  * Hint: `coerceIn(min, max)`.
  */
 fun Int.clampPercent(): Int =
-    TODO()
+    coerceIn(0, 100)
 
 /**
  * VARARG + a single-expression body. Build a query string from a path and zero or more
@@ -32,4 +32,5 @@ fun Int.clampPercent(): Int =
  *   buildQuery("/search", "q" to "kotlin", "p" to "2") -> "/search?q=kotlin&p=2"
  */
 fun buildQuery(path: String, vararg params: Pair<String, String>): String =
-    TODO()
+    if (params.isEmpty()) path
+    else path + "?" + params.joinToString("&") { (k, v) -> "$k=$v" }

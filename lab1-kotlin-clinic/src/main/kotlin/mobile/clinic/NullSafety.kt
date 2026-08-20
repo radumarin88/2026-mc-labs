@@ -20,14 +20,14 @@ package mobile.clinic
  * Hint: safe-call `?.` chains through null, and `toIntOrNull()` never throws.
  */
 fun batteryPctOrNull(raw: String?): Int? =
-    TODO()
+    raw?.trim()?.toIntOrNull()
 
 /**
  * Return the configured sync endpoint, or a default when it is missing/blank.
  * Hint: the Elvis operator `?:` supplies the fallback.
  */
 fun endpointOrDefault(configured: String?, default: String): String =
-    TODO()
+    configured?.takeIf { it.isNotBlank() } ?: default
 
 /**
  * A device id is required to talk to the backend. If it is missing this is a programmer/boot
@@ -38,4 +38,4 @@ fun endpointOrDefault(configured: String?, default: String): String =
  * IllegalArgumentException with your message.
  */
 fun requireDeviceId(id: String?): String =
-    TODO()
+    requireNotNull(id?.takeIf { it.isNotBlank() }) { "device id is required but was missing/blank" }

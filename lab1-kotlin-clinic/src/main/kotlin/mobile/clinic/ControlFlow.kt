@@ -19,14 +19,23 @@ enum class Connectivity { OFFLINE, METERED, UNMETERED }
  *   UNMETERED -> "sync-all"     (on Wi-Fi, do the full sync)
  */
 fun syncPolicy(c: Connectivity): String =
-    TODO()
+    when (c) {
+        Connectivity.OFFLINE -> "defer"
+        Connectivity.METERED -> "sync-small"
+        Connectivity.UNMETERED -> "sync-all"
+    }
 
 /**
  * Classify a battery percentage using `when` with RANGES. Coerce out-of-range input into 0..100.
  *   0..14 -> "critical" ; 15..49 -> "low" ; 50..89 -> "ok" ; else -> "full"
  */
 fun batteryBucket(pct: Int): String =
-    TODO()
+    when (pct.coerceIn(0, 100)) {
+        in 0..14 -> "critical"
+        in 15..49 -> "low"
+        in 50..89 -> "ok"
+        else -> "full"
+    }
 
 /**
  * Label a Wi-Fi signal (RSSI in dBm, higher/less-negative = stronger) using a SUBJECT-LESS
@@ -34,7 +43,12 @@ fun batteryBucket(pct: Int): String =
  *   >= -60 "excellent" ; >= -75 "good" ; >= -85 "weak" ; else "poor"
  */
 fun rssiLabel(rssi: Int): String =
-    TODO()
+    when {
+        rssi >= -60 -> "excellent"
+        rssi >= -75 -> "good"
+        rssi >= -85 -> "weak"
+        else -> "poor"
+    }
 
 /**
  * Build an EXPONENTIAL BACKOFF schedule with a loop/range: delay i = baseMs * 2^i for
@@ -42,4 +56,4 @@ fun rssiLabel(rssi: Int): String =
  * Systems: never hammer a flaky link at a fixed interval, back off.
  */
 fun backoffDelaysMs(baseMs: Long, attempts: Int): List<Long> =
-    TODO()
+    (0 until attempts).map { baseMs shl it }
