@@ -1,0 +1,9 @@
+# Build artifacts and local config for every lab (each lab is its own Gradle project).
+**/.gradle/
+**/build/
+**/.kotlin/
+**/local.properties
+.idea/
+*.iml
+.DS_Store
+.claude/
