@@ -10,6 +10,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 
+/**
+ * Exercise 2 (turn Hilt on). Add the annotation from Part 2 that lets Hilt inject into this Activity
+ * and the composables it hosts, so `PostsNavHost`'s `hiltViewModel()` can get its ViewModel from Hilt.
+ */
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

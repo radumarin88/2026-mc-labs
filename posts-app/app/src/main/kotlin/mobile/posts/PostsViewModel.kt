@@ -32,22 +32,12 @@ data class PostsUiState(
 }
 
 /**
- * Exercise 3. The ViewModel now OBSERVES the database (Lab 6).
- *
- * Instead of holding the posts itself, it collects the repository's Flows and copies each new value
- * into the state. So a write anywhere (a network refresh, a bookmark toggle) flows through Room and
- * back into the UI automatically. The database is the single source of truth; the ViewModel is just a
- * lens onto it.
- *
- * Implement the four TODOs:
- *   - in init, launch a coroutine that collects repository.observePosts() and copies each list into
- *     state.posts; and another that collects observeBookmarkIds() into state.bookmarkedIds.
- *   - refresh(): set isLoading, try repository.refresh(), catch into errorMessage, clear isLoading.
- *   - toggleBookmark(id): ask the repository to flip the bookmark (add it if it is not currently in
- *     bookmarkedIds, remove it otherwise). The change comes back through the Flow.
+ * Exercise 3. The ViewModel's Lab 6 observe/refresh logic is already here; the only Lab 8 change is its
+ * WIRING. Add `@HiltViewModel` and change the constructor to `@Inject constructor(...)` so Hilt builds
+ * it with its repository. Drop the old `= Graph.repository` default; `Graph` is gone.
  */
 class PostsViewModel(
-    private val repository: PostsRepository = Graph.repository,
+    private val repository: PostsRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PostsUiState(isLoading = true))

@@ -5,29 +5,23 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 
 /**
- * Exercise 2. The background job: refresh the database from the network.
+ * Exercise 5. Inject the worker's dependency (Lab 8). See docs/lab8.md, Part 2 "Workers", and exercise 5.
  *
- * A [CoroutineWorker] is a unit of deferrable, guaranteed background work whose [doWork] is a suspend
- * function (so it can call the repository directly). WorkManager runs it on a background thread, when
- * its constraints are met, and retries it if it fails. It does not talk to the UI at all: it just
- * writes fresh posts into Room, and the screen (which observes Room) updates itself.
+ * In Lab 7 this worker reached into the global `Graph` for its repository. `Graph` is gone. The snag:
+ * WorkManager is what CONSTRUCTS the worker, so you cannot just add the repository to a normal
+ * constructor. Hilt's answer is ASSISTED INJECTION: WorkManager supplies the runtime values (the
+ * `Context` and `WorkerParameters`), Hilt supplies the repository.
  *
- * Implement [doWork]: try the repository's refresh() and return Result.success(); if it throws (for
- * example the network is momentarily down), return Result.retry() so WorkManager tries again later
- * with backoff. The repository comes from the app's Graph, exactly as the ViewModel gets it.
+ * Work out, from Part 2 and the Hilt-WorkManager docs, which annotations go on the class and the
+ * constructor, which parameters are "assisted" (WorkManager's) and which Hilt provides. Then use the
+ * injected repository in `doWork()`: try `refresh()` then `showSyncNotification(applicationContext)`
+ * and return `Result.success()`; on failure return `Result.retry()`. The `HiltWorkerFactory` wiring in
+ * `PostsApp` is already provided.
  */
 class RefreshWorker(
     context: Context,
     params: WorkerParameters,
 ) : CoroutineWorker(context, params) {
 
-    override suspend fun doWork(): Result {
-        return try {
-            Graph.repository.refresh()
-            showSyncNotification(applicationContext)
-            Result.success()
-        } catch (e: Exception) {
-            Result.retry()
-        }
-    }
+    override suspend fun doWork(): Result = TODO()
 }

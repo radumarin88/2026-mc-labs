@@ -13,6 +13,7 @@ a layer was built.
 - Lab 5, Networking (Retrofit, coroutines): [docs/lab5.md](docs/lab5.md)
 - Lab 6, Persistence (Room, Flow): [docs/lab6.md](docs/lab6.md)
 - Lab 7, Offline-first (WorkManager): [docs/lab7.md](docs/lab7.md)
+- Lab 8, Dependency injection (Hilt): [docs/lab8.md](docs/lab8.md)
 
 More guides appear in `docs/` as the course reaches each lab.
 

@@ -1,10 +1,10 @@
-# Version catalog. Pinned to current stable tooling (verified October 2026).
+# Version catalog. Pinned to current stable tooling (verified November 2026).
 [versions]
-agp = "9.5.1"
+agp = "9.5.2"
 kotlin = "2.4.21"
-composeBom = "2026.09.00"
+composeBom = "2026.11.01"
 activityCompose = "1.13.0"
-lifecycle = "2.11.0"
+lifecycle = "2.11.1"
 coroutines = "1.11.0"
 retrofit = "3.0.0"                # brings OkHttp 4.12 transitively
 kotlinxSerialization = "1.13.0"

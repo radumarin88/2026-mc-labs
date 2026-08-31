@@ -3,8 +3,8 @@ package mobile.posts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -29,7 +29,7 @@ data class DetailRoute(val postId: Int)
 fun PostsNavHost(modifier: Modifier = Modifier) {
     RequestNotificationPermission()
     val navController = rememberNavController()
-    val vm: PostsViewModel = viewModel { PostsViewModel() }
+    val vm: PostsViewModel = hiltViewModel()
     val state by vm.uiState.collectAsStateWithLifecycle()
     NavHost(navController = navController, startDestination = ListRoute, modifier = modifier) {
         composable<ListRoute> {

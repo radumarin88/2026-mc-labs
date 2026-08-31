@@ -1,8 +1,9 @@
 package mobile.posts
 
 import android.app.Application
-import android.content.Context
-import androidx.room.Room
+import androidx.hilt.work.HiltWorkerFactory
+import androidx.work.Configuration
+import javax.inject.Inject
 
 /**
  * Mapping across the boundaries: network model -> entity (on the way in), entity -> domain model (on
@@ -12,33 +13,27 @@ fun PostEntity.toDomain(): Post = Post(id = id, title = title, body = body)
 fun PostDto.toEntity(): PostEntity = PostEntity(id = id, title = title, body = body)
 
 /**
- * A tiny manual dependency container (a "service locator"). Room needs a Context to open the database,
- * and the repository needs the DAO, so we build both once when the app starts and hand out the ready
- * repository. This is deliberately hand-wired; Lab 8 replaces it with Hilt. Provided for you.
+ * Exercise 2 (turn Hilt on). This Application is the ROOT of Hilt's graph. Add the one annotation from
+ * Part 2 that bootstraps Hilt, so the `@Inject` field below is satisfied and `@AndroidEntryPoint` /
+ * `@HiltViewModel` elsewhere can compile. Without it, Hilt generates nothing and the build fails.
+ *
+ * The WorkManager plumbing is PROVIDED: this is a `Configuration.Provider` that hands WorkManager a
+ * `HiltWorkerFactory` (Hilt injects it into the field below), and the manifest disables WorkManager's
+ * default initializer so ours is used. You supply the switch; the factory wiring is done. (The
+ * hand-wired `Graph` service locator from Labs 6 and 7 is gone: Hilt does that wiring now.)
  */
-object Graph {
-    // `internal set` is a test seam: instrumented tests swap in a repository backed by fakes.
-    lateinit var repository: PostsRepository
-        internal set
+class PostsApp : Application(), Configuration.Provider {
 
-    fun provide(context: Context) {
-        val database = Room.databaseBuilder(
-            context.applicationContext,
-            AppDatabase::class.java,
-            "posts.db",
-        ).build()
-        repository = PostsRepository(dao = database.postsDao(), api = RetrofitInstance.api)
-    }
-}
+    @Inject
+    lateinit var workerFactory: HiltWorkerFactory
 
-/**
- * The Application builds the container before any screen is shown, and schedules the background sync
- * (Lab 7). Declared in the manifest. Provided.
- */
-class PostsApp : Application() {
+    override val workManagerConfiguration: Configuration
+        get() = Configuration.Builder()
+            .setWorkerFactory(workerFactory)
+            .build()
+
     override fun onCreate() {
         super.onCreate()
-        Graph.provide(this)
         Sync.schedule(this)
     }
 }
