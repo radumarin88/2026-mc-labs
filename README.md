@@ -7,6 +7,9 @@ This repository holds the course labs, one folder per lab. Each lab is a self-co
 | 1 | [`lab1-kotlin-clinic`](lab1-kotlin-clinic) | Kotlin clinic | IntelliJ IDEA or a terminal (pure JVM) |
 | 2 | [`lab2-compose`](lab2-compose) | Compose: fundamentals to navigation | Android Studio |
 | 3 | [`lab3-ai-prototype`](lab3-ai-prototype) | AI-assisted prototype (create your own app) | A guide plus templates, not a project |
+| 4 | [`posts-app`](posts-app) | Architecture (ViewModel, UDF) | Android Studio |
+
+Labs 4 to 10 all live in the one `posts-app` folder, which grows a layer each lab.
 
 Each lab folder has its own `README.md` with setup and step-by-step instructions. Start there.
 
