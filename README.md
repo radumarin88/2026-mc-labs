@@ -10,6 +10,7 @@ This repository holds the course labs, one folder per lab. Each lab is a self-co
 | 4 | [`posts-app`](posts-app) | Architecture (ViewModel, UDF) | Android Studio |
 | 5 | [`posts-app`](posts-app) | Networking (Retrofit, coroutines) | Android Studio |
 | 6 | [`posts-app`](posts-app) | Persistence (Room, Flow) | Android Studio |
+| 7 | [`posts-app`](posts-app) | Offline-first (WorkManager) | Android Studio |
 
 Labs 4 to 10 all live in the one `posts-app` folder, which grows a layer each lab.
 

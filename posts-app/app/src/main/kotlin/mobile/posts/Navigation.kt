@@ -27,6 +27,7 @@ data class DetailRoute(val postId: Int)
  */
 @Composable
 fun PostsNavHost(modifier: Modifier = Modifier) {
+    RequestNotificationPermission()
     val navController = rememberNavController()
     val vm: PostsViewModel = viewModel { PostsViewModel() }
     val state by vm.uiState.collectAsStateWithLifecycle()

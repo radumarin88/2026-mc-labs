@@ -12,6 +12,7 @@ a layer was built.
 - Lab 4, Architecture (ViewModel, UDF): [docs/lab4.md](docs/lab4.md)
 - Lab 5, Networking (Retrofit, coroutines): [docs/lab5.md](docs/lab5.md)
 - Lab 6, Persistence (Room, Flow): [docs/lab6.md](docs/lab6.md)
+- Lab 7, Offline-first (WorkManager): [docs/lab7.md](docs/lab7.md)
 
 More guides appear in `docs/` as the course reaches each lab.
 

@@ -17,8 +17,9 @@ fun PostDto.toEntity(): PostEntity = PostEntity(id = id, title = title, body = b
  * repository. This is deliberately hand-wired; Lab 8 replaces it with Hilt. Provided for you.
  */
 object Graph {
+    // `internal set` is a test seam: instrumented tests swap in a repository backed by fakes.
     lateinit var repository: PostsRepository
-        private set
+        internal set
 
     fun provide(context: Context) {
         val database = Room.databaseBuilder(
@@ -30,10 +31,14 @@ object Graph {
     }
 }
 
-/** The Application builds the container before any screen is shown. Declared in the manifest. Provided. */
+/**
+ * The Application builds the container before any screen is shown, and schedules the background sync
+ * (Lab 7). Declared in the manifest. Provided.
+ */
 class PostsApp : Application() {
     override fun onCreate() {
         super.onCreate()
         Graph.provide(this)
+        Sync.schedule(this)
     }
 }
