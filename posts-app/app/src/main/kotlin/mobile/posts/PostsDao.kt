@@ -1,23 +1,40 @@
 package mobile.posts
 
-/*
- * Exercise 3. The DAO: your queries as annotated methods. See docs/lab6.md, Part 2 "The DAO" and
- * exercise 3.
+import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+import androidx.room.Upsert
+import kotlinx.coroutines.flow.Flow
+
+/**
+ * Exercise 1. The Data Access Object: the queries Room turns into real SQLite calls.
  *
- * Write a `@Dao interface PostsDao` with these methods (match the signatures; the repository and the
- * fake DAO in the tests rely on them):
- *
- *   - observePosts(): Flow<List<PostEntity>>
- *       @Query selecting every row from the posts table. A Flow, so it re-emits on every change.
- *   - upsertPosts(posts: List<PostEntity>)   // suspend
- *       @Upsert: insert new rows, replace existing ones by primary key.
- *   - observeBookmarkIds(): Flow<List<Int>>
- *       @Query selecting the id column from the bookmarks table.
- *   - addBookmark(bookmark: BookmarkEntity)  // suspend
- *       @Insert with onConflict = OnConflictStrategy.IGNORE.
- *   - removeBookmark(id: Int)                // suspend
- *       @Query deleting the bookmarks row whose id equals the bound :id.
- *
- * Reads are Flow (reactive); writes are suspend (off the main thread). Add the imports as you type
- * (androidx.room.*, kotlinx.coroutines.flow.Flow).
+ * Note two things. The read queries return a [Flow]: Room re-runs them and emits a new list every
+ * time the underlying table changes, so the UI updates itself when data is written. The writes are
+ * `suspend`, because touching the disk must happen off the main thread. Add the annotations and query
+ * strings for each function.
  */
+@Dao
+interface PostsDao {
+
+    /** Observe every cached post. Emits again whenever the posts table changes. */
+    @Query("SELECT * FROM posts")
+    fun observePosts(): Flow<List<PostEntity>>
+
+    /** Insert or update the given posts (upsert = insert new rows, replace existing ones by id). */
+    @Upsert
+    suspend fun upsertPosts(posts: List<PostEntity>)
+
+    /** Observe the ids of the bookmarked posts. Emits again whenever the bookmarks table changes. */
+    @Query("SELECT id FROM bookmarks")
+    fun observeBookmarkIds(): Flow<List<Int>>
+
+    /** Add a bookmark; do nothing if it is already there. */
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun addBookmark(bookmark: BookmarkEntity)
+
+    /** Remove the bookmark for the given post id. */
+    @Query("DELETE FROM bookmarks WHERE id = :id")
+    suspend fun removeBookmark(id: Int)
+}

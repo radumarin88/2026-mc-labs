@@ -2,7 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.kotlin.serialization)
-    // Exercise 1 (Lab 6): apply the KSP plugin here.
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -57,7 +57,8 @@ dependencies {
     implementation(libs.retrofit.kotlinx.serialization)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.coroutines.android)
-    // Exercise 1 (Lab 6): add the Room runtime (implementation) and compiler (ksp) here.
+    implementation(libs.androidx.room.runtime)
+    ksp(libs.androidx.room.compiler)
     debugImplementation(libs.compose.ui.tooling)
 
     testImplementation(libs.junit)
