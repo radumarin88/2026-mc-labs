@@ -1,20 +1,23 @@
 package mobile.posts
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 /**
  * The complete, immutable screen state. It stores the source of truth (the posts, which bookmarks
  * the user set, the search query, the filter, and whether a load is in flight or failed); what the
  * screen actually shows ([visiblePosts]) and the [bookmarkCount] are DERIVED so they cannot drift.
  *
- * The [isLoading] and [errorMessage] fields are new in Lab 5, for when the posts come from the
- * network. Keeping them as fields on the same state (rather than a separate Loading/Error type) lets
- * the screen show cached posts AND a refresh spinner or error at the same time, which is exactly what
- * offline-first needs in Lab 7.
+ * The bookmark and search fields arrive in Lab 4; the loading/error fields arrive in Lab 5 when the
+ * posts start coming from the network. Note the design: keeping [isLoading]/[errorMessage] as fields
+ * on the same state (rather than a separate Loading/Error type) means the screen can show cached
+ * posts AND a refresh spinner or error at the same time, which is exactly what offline-first needs
+ * in Lab 7.
  */
 data class PostsUiState(
     val posts: List<Post> = emptyList(),
@@ -47,14 +50,20 @@ class PostsViewModel(
     }
 
     /**
-     * Exercise 3 (Lab 5). Fetch the posts as a coroutine. In viewModelScope.launch: set isLoading =
-     * true and clear any error, then try the repository and publish the posts with isLoading = false;
-     * catch any exception and publish the message with isLoading = false. Leave the bookmarks and
-     * query untouched (copy the current state). Runs off the main thread; cancelled with the ViewModel.
-     * (Let Android Studio add the imports as you type.)
+     * Fetch the posts as a coroutine (Lab 5). Sets loading, tries the repository, and turns the
+     * outcome into state: the posts on success, an error message on failure. Runs off the main
+     * thread and is cancelled with the ViewModel, so a screen you left cannot keep a request alive.
      */
     fun refresh() {
-        TODO()
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            try {
+                val posts = repository.loadPosts()
+                _uiState.update { it.copy(posts = posts, isLoading = false) }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, errorMessage = e.message ?: "Something went wrong") }
+            }
+        }
     }
 
     fun setQuery(query: String) {
