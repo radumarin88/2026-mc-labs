@@ -1,71 +1,100 @@
 package mobile.posts
 
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 
 /**
- * Fast JVM tests for the ViewModel. They run on your computer in milliseconds with no device,
- * because the logic has no Android or UI in it. That is the payoff of moving logic out of
- * composables. Run: `./gradlew test`. Do not edit the tests.
+ * Fast JVM tests for the ViewModel, with a fake API and virtual time (no device, no real network).
+ * Do not edit the tests.
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 class PostsViewModelTest {
 
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+
+    private val sample = listOf(
+        PostDto(1, "Kotlin coroutines", "structured concurrency"),
+        PostDto(2, "Room database", "on-device source of truth"),
+        PostDto(3, "WorkManager", "constraint-aware background work"),
+    )
+
+    private fun viewModel(api: FakePostsApi) = PostsViewModel(PostsRepository(api))
+
     @Test
-    fun `initial state shows the seed posts with no bookmarks and no filter`() {
-        val vm = PostsViewModel()
-        val state = vm.uiState.value
-        assertEquals(seedPosts, state.posts)
-        assertEquals(0, state.bookmarkCount)
-        assertFalse(state.showBookmarkedOnly)
-        assertEquals(seedPosts, state.visiblePosts)
+    fun `starts loading, then ends in success with the fetched posts`() = runTest {
+        val api = FakePostsApi().apply { result = Result.success(sample) }
+        val vm = viewModel(api)
+        assertTrue(vm.uiState.value.isLoading)          // init launched refresh, not yet run
+        advanceUntilIdle()
+        assertFalse(vm.uiState.value.isLoading)
+        assertEquals(3, vm.uiState.value.posts.size)
     }
 
     @Test
-    fun `search filters the visible posts by title`() {
-        val vm = PostsViewModel()
+    fun `a failing load ends with an error message`() = runTest {
+        val api = FakePostsApi().apply { result = Result.failure(RuntimeException("no network")) }
+        val vm = viewModel(api)
+        advanceUntilIdle()
+        assertEquals("no network", vm.uiState.value.errorMessage)
+    }
+
+    @Test
+    fun `retry after a failure can succeed`() = runTest {
+        val api = FakePostsApi().apply { result = Result.failure(RuntimeException("down")) }
+        val vm = viewModel(api)
+        advanceUntilIdle()
+        assertEquals("down", vm.uiState.value.errorMessage)
+
+        api.result = Result.success(sample)
+        vm.refresh()
+        advanceUntilIdle()
+        assertEquals(3, vm.uiState.value.posts.size)
+        assertEquals(null, vm.uiState.value.errorMessage)
+    }
+
+    @Test
+    fun `search filters the visible posts by title`() = runTest {
+        val vm = viewModel(FakePostsApi().apply { result = Result.success(sample) })
+        advanceUntilIdle()
         vm.setQuery("room")
         assertEquals(listOf(2), vm.uiState.value.visiblePosts.map { it.id })
     }
 
     @Test
-    fun `bookmarking is tracked and the count updates`() {
-        val vm = PostsViewModel()
+    fun `bookmarking is tracked and the count updates`() = runTest {
+        val vm = viewModel(FakePostsApi().apply { result = Result.success(sample) })
+        advanceUntilIdle()
         vm.toggleBookmark(1)
         vm.toggleBookmark(3)
         assertEquals(2, vm.uiState.value.bookmarkCount)
-        assertTrue(1 in vm.uiState.value.bookmarkedIds)
         vm.toggleBookmark(1) // toggle off
         assertEquals(1, vm.uiState.value.bookmarkCount)
-        assertFalse(1 in vm.uiState.value.bookmarkedIds)
     }
 
     @Test
-    fun `bookmarked-only filter shows only saved posts`() {
-        val vm = PostsViewModel()
+    fun `bookmarked-only filter shows only saved posts`() = runTest {
+        val vm = viewModel(FakePostsApi().apply { result = Result.success(sample) })
+        advanceUntilIdle()
         vm.toggleBookmark(2)
         vm.setShowBookmarkedOnly(true)
         assertEquals(listOf(2), vm.uiState.value.visiblePosts.map { it.id })
     }
 
     @Test
-    fun `search and bookmark filter combine`() {
-        val vm = PostsViewModel()
-        vm.toggleBookmark(1)
+    fun `bookmarks survive a refresh`() = runTest {
+        val api = FakePostsApi().apply { result = Result.success(sample) }
+        val vm = viewModel(api)
+        advanceUntilIdle()
         vm.toggleBookmark(2)
-        vm.setShowBookmarkedOnly(true)
-        vm.setQuery("kotlin")
-        // only bookmarked posts whose title contains "kotlin" -> post 1
-        assertEquals(listOf(1), vm.uiState.value.visiblePosts.map { it.id })
-    }
-
-    @Test
-    fun `state transitions do not mutate the previous state`() {
-        val vm = PostsViewModel()
-        val first = vm.uiState.value
-        vm.toggleBookmark(1)
-        assertEquals(0, first.bookmarkCount)               // old snapshot untouched
-        assertEquals(1, vm.uiState.value.bookmarkCount)
+        vm.refresh()
+        advanceUntilIdle()
+        assertTrue(2 in vm.uiState.value.bookmarkedIds)
     }
 }

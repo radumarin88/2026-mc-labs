@@ -7,17 +7,22 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
 /**
- * The complete, immutable screen state. It stores the source of truth (the posts, which the user has
- * bookmarked, the search query, and whether to show only bookmarks); what the screen shows
- * ([visiblePosts]) and the [bookmarkCount] are DERIVED, so they can never drift out of sync.
+ * The complete, immutable screen state. It stores the source of truth (the posts, which bookmarks
+ * the user set, the search query, the filter, and whether a load is in flight or failed); what the
+ * screen actually shows ([visiblePosts]) and the [bookmarkCount] are DERIVED so they cannot drift.
  *
- * Lab 5 adds loading and error fields here when the posts start coming from the network.
+ * The [isLoading] and [errorMessage] fields are new in Lab 5, for when the posts come from the
+ * network. Keeping them as fields on the same state (rather than a separate Loading/Error type) lets
+ * the screen show cached posts AND a refresh spinner or error at the same time, which is exactly what
+ * offline-first needs in Lab 7.
  */
 data class PostsUiState(
     val posts: List<Post> = emptyList(),
     val bookmarkedIds: Set<Int> = emptySet(),
     val query: String = "",
     val showBookmarkedOnly: Boolean = false,
+    val isLoading: Boolean = false,
+    val errorMessage: String? = null,
 ) {
     val visiblePosts: List<Post>
         get() = posts.filter { post ->
@@ -29,15 +34,28 @@ data class PostsUiState(
         get() = bookmarkedIds.size
 }
 
-/**
- * The state holder. It owns the state and is the only thing that changes it; the UI reads the state
- * and reports events. For now the posts come from an in-memory list; in Lab 5 they come from the
- * network and this ViewModel gains a repository and a refresh coroutine.
- */
-class PostsViewModel : ViewModel() {
+class PostsViewModel(
+    private val repository: PostsRepository = PostsRepository(RetrofitInstance.api),
+) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(PostsUiState(posts = seedPosts))
+    // Starts in the loading state, because init immediately refreshes from the network.
+    private val _uiState = MutableStateFlow(PostsUiState(isLoading = true))
     val uiState: StateFlow<PostsUiState> = _uiState.asStateFlow()
+
+    init {
+        refresh()
+    }
+
+    /**
+     * Exercise 3 (Lab 5). Fetch the posts as a coroutine. In viewModelScope.launch: set isLoading =
+     * true and clear any error, then try the repository and publish the posts with isLoading = false;
+     * catch any exception and publish the message with isLoading = false. Leave the bookmarks and
+     * query untouched (copy the current state). Runs off the main thread; cancelled with the ViewModel.
+     * (Let Android Studio add the imports as you type.)
+     */
+    fun refresh() {
+        TODO()
+    }
 
     fun setQuery(query: String) {
         _uiState.update { it.copy(query = query) }

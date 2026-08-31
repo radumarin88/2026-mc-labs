@@ -18,7 +18,7 @@ class MainActivity : ComponentActivity() {
             AppTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     Box(modifier = Modifier.safeDrawingPadding()) {
-                        PostsRoute()
+                        PostsNavHost()
                     }
                 }
             }

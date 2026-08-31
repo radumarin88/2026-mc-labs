@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- The app fetches from a server, so it needs the INTERNET permission (added in Lab 5). It is a
+         normal install-time permission: granted automatically, no runtime prompt. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:allowBackup="true"
         android:label="Posts"
