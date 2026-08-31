@@ -1,18 +1,49 @@
 package mobile.posts
 
-/*
- * Exercise 4. Teach Hilt to build what it CANNOT construct on its own. See docs/lab8.md, Part 2
- * ("@Module and @Provides") and exercise 4.
+import android.content.Context
+import androidx.room.Room
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.components.SingletonComponent
+import kotlinx.serialization.json.Json
+import okhttp3.MediaType.Companion.toMediaType
+import retrofit2.Retrofit
+import retrofit2.converter.kotlinx.serialization.asConverterFactory
+import javax.inject.Singleton
+
+/**
+ * Exercise 2. The Hilt module: how to build the things Hilt cannot construct on its own.
  *
- * Hilt can build any class you mark `@Inject constructor`. It cannot build the Room database or the
- * Retrofit API, because those come from BUILDERS, not constructors. So you provide them here.
+ * Hilt can create a class marked `@Inject constructor` by itself. But it does not know how to build a
+ * Room database (that needs Room.databaseBuilder and a Context) or a Retrofit API (that needs a
+ * builder). So you teach it, with @Provides functions in a @Module. @InstallIn(SingletonComponent)
+ * puts these in the app-wide graph; @Singleton means "make one and reuse it".
  *
- * Write an `object AppModule` that is a Hilt `@Module` installed in `SingletonComponent`, exposing a
- * `@Provides` function for each thing the graph needs but cannot build itself: the `AppDatabase`, the
- * `PostsDao` (the database hands it out), and the `PostsApi`.
- *
- * You already wrote the Room builder in LAB 6 and the Retrofit setup in LAB 5 - look back at your own
- * code and move that construction here, behind `@Provides`. Then decide, and be ready to defend in the
- * review: which of these should be `@Singleton`, and which should not? (Part 2, "Scoping: less is
- * more.") That decision is the point of the exercise, not the annotations.
+ * The DAO and the API here are exactly what the repository asks for in its constructor, so once this
+ * module exists, Hilt can build the repository, the ViewModel that needs it, and the worker too.
  */
+@Module
+@InstallIn(SingletonComponent::class)
+object AppModule {
+
+    @Provides
+    @Singleton
+    fun provideDatabase(@ApplicationContext context: Context): AppDatabase =
+        Room.databaseBuilder(context, AppDatabase::class.java, "posts.db").build()
+
+    @Provides
+    fun providePostsDao(database: AppDatabase): PostsDao = database.postsDao()
+
+    @Provides
+    @Singleton
+    fun providePostsApi(): PostsApi {
+        val json = Json { ignoreUnknownKeys = true }
+        return Retrofit.Builder()
+            .baseUrl("https://jsonplaceholder.typicode.com/")
+            .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
+            .build()
+            .create(PostsApi::class.java)
+    }
+}

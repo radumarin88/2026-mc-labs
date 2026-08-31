@@ -2,14 +2,23 @@ package mobile.posts
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import javax.inject.Inject
 
 /**
- * The offline-first repository (from Lab 6). Its logic does not change in Lab 8; only its wiring does.
+ * Exercise 2. The repository, now OFFLINE-FIRST (Lab 6).
  *
- * Exercise 3: mark the constructor `@Inject constructor(...)` so Hilt can build it, supplying
- * the PostsDao and PostsApi from the module you wrote. (Add the import javax.inject.Inject.)
+ * The big idea: the local database is the single source of truth. The UI observes the database (not
+ * the network), so it shows whatever is cached, instantly and offline. The network's only job is to
+ * write fresh data INTO the database; when it does, Room's Flow emits and the UI updates on its own.
+ *
+ * Implement the four members:
+ *   - observePosts(): map the DAO's Flow<List<PostEntity>> to Flow<List<Post>> (domain model).
+ *   - observeBookmarkIds(): map the DAO's Flow<List<Int>> to Flow<Set<Int>>.
+ *   - refresh(): fetch from the api and write the results into the DAO (map each PostDto to a
+ *     PostEntity). Do not touch the UI here; the Flow does that.
+ *   - setBookmarked(id, bookmarked): add or remove the bookmark in the DAO.
  */
-class PostsRepository(
+class PostsRepository @Inject constructor(
     private val dao: PostsDao,
     private val api: PostsApi,
 ) {

@@ -1,27 +1,35 @@
 package mobile.posts
 
 import android.content.Context
+import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedInject
 
 /**
- * Exercise 5. Inject the worker's dependency (Lab 8). See docs/lab8.md, Part 2 "Workers", and exercise 5.
+ * Exercise 4. The worker, now with its dependency INJECTED (Lab 8).
  *
- * In Lab 7 this worker reached into the global `Graph` for its repository. `Graph` is gone. The snag:
- * WorkManager is what CONSTRUCTS the worker, so you cannot just add the repository to a normal
- * constructor. Hilt's answer is ASSISTED INJECTION: WorkManager supplies the runtime values (the
- * `Context` and `WorkerParameters`), Hilt supplies the repository.
- *
- * Work out, from Part 2 and the Hilt-WorkManager docs, which annotations go on the class and the
- * constructor, which parameters are "assisted" (WorkManager's) and which Hilt provides. Then use the
- * injected repository in `doWork()`: try `refresh()` then `showSyncNotification(applicationContext)`
- * and return `Result.success()`; on failure return `Result.retry()`. The `HiltWorkerFactory` wiring in
- * `PostsApp` is already provided.
+ * In Lab 7 the worker reached into the global Graph for its repository, because WorkManager, not you,
+ * constructs the worker and you could not pass anything in. Hilt fixes that: @HiltWorker plus an
+ * @AssistedInject constructor lets Hilt provide the repository while WorkManager still provides the
+ * Context and WorkerParameters (the "assisted" arguments). The app's HiltWorkerFactory, wired in
+ * PostsApp, is what connects the two. No more global; the worker declares what it needs.
  */
-class RefreshWorker(
-    context: Context,
-    params: WorkerParameters,
+@HiltWorker
+class RefreshWorker @AssistedInject constructor(
+    @Assisted context: Context,
+    @Assisted params: WorkerParameters,
+    private val repository: PostsRepository,
 ) : CoroutineWorker(context, params) {
 
-    override suspend fun doWork(): Result = TODO()
+    override suspend fun doWork(): Result {
+        return try {
+            repository.refresh()
+            showSyncNotification(applicationContext)
+            Result.success()
+        } catch (e: Exception) {
+            Result.retry()
+        }
+    }
 }

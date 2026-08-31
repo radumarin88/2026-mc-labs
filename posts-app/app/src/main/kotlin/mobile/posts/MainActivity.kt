@@ -9,11 +9,10 @@ import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
+import dagger.hilt.android.AndroidEntryPoint
 
-/**
- * Exercise 2 (turn Hilt on). Add the annotation from Part 2 that lets Hilt inject into this Activity
- * and the composables it hosts, so `PostsNavHost`'s `hiltViewModel()` can get its ViewModel from Hilt.
- */
+/** @AndroidEntryPoint lets Hilt inject into this Activity and the composables it hosts (hiltViewModel). */
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
