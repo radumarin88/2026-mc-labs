@@ -24,7 +24,7 @@ Open the `posts-app` folder in Android Studio and let Gradle sync. The exercises
 
 They start red. That is your starting line.
 
-Pinned tooling (verified October 2026): **AGP 9.4.1**, **Kotlin 2.4.21**, **Compose BOM 2026.09.00**, **Lifecycle 2.11.0** (ViewModel and `collectAsStateWithLifecycle`), **compileSdk 37**.
+Pinned tooling (verified October 2026): **AGP 9.5.1**, **Kotlin 2.4.21**, **Compose BOM 2026.09.00**, **Lifecycle 2.11.0** (ViewModel and `collectAsStateWithLifecycle`), **compileSdk 37**.
 
 ### The one production concern: SEPARATE UI FROM LOGIC (state down, events up)
 

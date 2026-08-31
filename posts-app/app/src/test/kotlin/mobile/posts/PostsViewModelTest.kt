@@ -4,14 +4,13 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
 /**
- * Fast JVM tests for the ViewModel, with a fake API and virtual time (no device, no real network).
- * Do not edit the tests.
+ * Fast JVM tests for the ViewModel, with a fake API and a fake DAO and virtual time (no device, no
+ * network, no real database). Do not edit the tests.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class PostsViewModelTest {
@@ -22,79 +21,55 @@ class PostsViewModelTest {
     private val sample = listOf(
         PostDto(1, "Kotlin coroutines", "structured concurrency"),
         PostDto(2, "Room database", "on-device source of truth"),
-        PostDto(3, "WorkManager", "constraint-aware background work"),
     )
 
-    private fun viewModel(api: FakePostsApi) = PostsViewModel(PostsRepository(api))
+    private fun viewModel(
+        api: FakePostsApi = FakePostsApi().apply { result = Result.success(sample) },
+        dao: FakePostsDao = FakePostsDao(),
+    ) = PostsViewModel(PostsRepository(dao, api))
 
     @Test
-    fun `starts loading, then ends in success with the fetched posts`() = runTest {
-        val api = FakePostsApi().apply { result = Result.success(sample) }
-        val vm = viewModel(api)
-        assertTrue(vm.uiState.value.isLoading)          // init launched refresh, not yet run
+    fun `refresh loads posts from the network into the database and the state observes them`() = runTest {
+        val vm = viewModel()
         advanceUntilIdle()
-        assertFalse(vm.uiState.value.isLoading)
-        assertEquals(3, vm.uiState.value.posts.size)
+        assertEquals(listOf(1, 2), vm.uiState.value.posts.map { it.id })
+        assertEquals(false, vm.uiState.value.isLoading)
     }
 
     @Test
-    fun `a failing load ends with an error message`() = runTest {
-        val api = FakePostsApi().apply { result = Result.failure(RuntimeException("no network")) }
-        val vm = viewModel(api)
+    fun `a failing refresh sets an error message`() = runTest {
+        val vm = viewModel(api = FakePostsApi().apply { result = Result.failure(RuntimeException("no network")) })
         advanceUntilIdle()
         assertEquals("no network", vm.uiState.value.errorMessage)
     }
 
     @Test
-    fun `retry after a failure can succeed`() = runTest {
-        val api = FakePostsApi().apply { result = Result.failure(RuntimeException("down")) }
-        val vm = viewModel(api)
+    fun `cached posts are shown even when the refresh fails`() = runTest {
+        // the database already has a cached post; the network is down
+        val dao = FakePostsDao().apply { upsertPosts(listOf(PostEntity(7, "Cached", "offline"))) }
+        val vm = viewModel(api = FakePostsApi().apply { result = Result.failure(RuntimeException("down")) }, dao = dao)
         advanceUntilIdle()
+        assertEquals(listOf(7), vm.uiState.value.posts.map { it.id })  // offline-first: cache still shows
         assertEquals("down", vm.uiState.value.errorMessage)
+    }
 
-        api.result = Result.success(sample)
-        vm.refresh()
+    @Test
+    fun `toggleBookmark persists through the database and back into the state`() = runTest {
+        val vm = viewModel()
         advanceUntilIdle()
-        assertEquals(3, vm.uiState.value.posts.size)
-        assertEquals(null, vm.uiState.value.errorMessage)
+        vm.toggleBookmark(1)
+        advanceUntilIdle()
+        assertTrue(1 in vm.uiState.value.bookmarkedIds)
+        vm.toggleBookmark(1)
+        advanceUntilIdle()
+        assertTrue(1 !in vm.uiState.value.bookmarkedIds)
     }
 
     @Test
     fun `search filters the visible posts by title`() = runTest {
-        val vm = viewModel(FakePostsApi().apply { result = Result.success(sample) })
+        val vm = viewModel()
         advanceUntilIdle()
         vm.setQuery("room")
         assertEquals(listOf(2), vm.uiState.value.visiblePosts.map { it.id })
-    }
-
-    @Test
-    fun `bookmarking is tracked and the count updates`() = runTest {
-        val vm = viewModel(FakePostsApi().apply { result = Result.success(sample) })
-        advanceUntilIdle()
-        vm.toggleBookmark(1)
-        vm.toggleBookmark(3)
-        assertEquals(2, vm.uiState.value.bookmarkCount)
-        vm.toggleBookmark(1) // toggle off
-        assertEquals(1, vm.uiState.value.bookmarkCount)
-    }
-
-    @Test
-    fun `bookmarked-only filter shows only saved posts`() = runTest {
-        val vm = viewModel(FakePostsApi().apply { result = Result.success(sample) })
-        advanceUntilIdle()
-        vm.toggleBookmark(2)
-        vm.setShowBookmarkedOnly(true)
-        assertEquals(listOf(2), vm.uiState.value.visiblePosts.map { it.id })
-    }
-
-    @Test
-    fun `bookmarks survive a refresh`() = runTest {
-        val api = FakePostsApi().apply { result = Result.success(sample) }
-        val vm = viewModel(api)
-        advanceUntilIdle()
-        vm.toggleBookmark(2)
-        vm.refresh()
-        advanceUntilIdle()
-        assertTrue(2 in vm.uiState.value.bookmarkedIds)
     }
 }

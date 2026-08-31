@@ -1,12 +1,37 @@
 package mobile.posts
 
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+
 /**
- * The repository: the single place the app asks for posts (Lab 5). It calls the network and maps the
- * network model ([PostDto]) to the domain model ([Post]), so callers never see JSON shapes. It takes
- * the [PostsApi] as a constructor parameter, which lets tests pass in a fake API instead of the real
- * network. In Lab 6 this becomes the seam where a local database is added.
+ * Exercise 2. The repository, now OFFLINE-FIRST (Lab 6).
+ *
+ * The big idea: the local database is the single source of truth. The UI observes the database (not
+ * the network), so it shows whatever is cached, instantly and offline. The network's only job is to
+ * write fresh data INTO the database; when it does, Room's Flow emits and the UI updates on its own.
+ *
+ * Implement the four members:
+ *   - observePosts(): map the DAO's Flow<List<PostEntity>> to Flow<List<Post>> (domain model).
+ *   - observeBookmarkIds(): map the DAO's Flow<List<Int>> to Flow<Set<Int>>.
+ *   - refresh(): fetch from the api and write the results into the DAO (map each PostDto to a
+ *     PostEntity). Do not touch the UI here; the Flow does that.
+ *   - setBookmarked(id, bookmarked): add or remove the bookmark in the DAO.
  */
-class PostsRepository(private val api: PostsApi) {
-    suspend fun loadPosts(): List<Post> =
-        api.getPosts().map { dto -> Post(id = dto.id, title = dto.title, body = dto.body) }
+class PostsRepository(
+    private val dao: PostsDao,
+    private val api: PostsApi,
+) {
+    fun observePosts(): Flow<List<Post>> =
+        dao.observePosts().map { entities -> entities.map(PostEntity::toDomain) }
+
+    fun observeBookmarkIds(): Flow<Set<Int>> =
+        dao.observeBookmarkIds().map { ids -> ids.toSet() }
+
+    suspend fun refresh() {
+        dao.upsertPosts(api.getPosts().map(PostDto::toEntity))
+    }
+
+    suspend fun setBookmarked(id: Int, bookmarked: Boolean) {
+        if (bookmarked) dao.addBookmark(BookmarkEntity(id)) else dao.removeBookmark(id)
+    }
 }
