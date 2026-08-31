@@ -19,16 +19,14 @@ data class PostsUiState(
     val query: String = "",
     val showBookmarkedOnly: Boolean = false,
 ) {
-    /**
-     * Exercise 1a. The posts to display: keep a post when we are not filtering to bookmarks or it is
-     * bookmarked, AND its title contains the query (case-insensitive).
-     */
     val visiblePosts: List<Post>
-        get() = TODO()
+        get() = posts.filter { post ->
+            (!showBookmarkedOnly || post.id in bookmarkedIds) &&
+                post.title.contains(query.trim(), ignoreCase = true)
+        }
 
-    /** Exercise 1b. How many posts are bookmarked. */
     val bookmarkCount: Int
-        get() = TODO()
+        get() = bookmarkedIds.size
 }
 
 /**
@@ -39,25 +37,20 @@ data class PostsUiState(
 class PostsViewModel : ViewModel() {
 
     private val _uiState = MutableStateFlow(PostsUiState(posts = seedPosts))
+    val uiState: StateFlow<PostsUiState> = _uiState.asStateFlow()
 
-    /** Exercise 2. Expose [_uiState] to the UI as a read-only StateFlow. */
-    val uiState: StateFlow<PostsUiState> = TODO()
-
-    /** Exercise 3. Produce a new state with the search query changed. */
     fun setQuery(query: String) {
-        TODO()
+        _uiState.update { it.copy(query = query) }
     }
 
-    /** Exercise 4. Produce a new state with the "bookmarked only" flag changed. */
     fun setShowBookmarkedOnly(only: Boolean) {
-        TODO()
+        _uiState.update { it.copy(showBookmarkedOnly = only) }
     }
 
-    /**
-     * Exercise 5. Toggle a bookmark: if [id] is already in bookmarkedIds, remove it; otherwise add
-     * it. Produce a new state (do not mutate the set).
-     */
     fun toggleBookmark(id: Int) {
-        TODO()
+        _uiState.update { state ->
+            val ids = if (id in state.bookmarkedIds) state.bookmarkedIds - id else state.bookmarkedIds + id
+            state.copy(bookmarkedIds = ids)
+        }
     }
 }

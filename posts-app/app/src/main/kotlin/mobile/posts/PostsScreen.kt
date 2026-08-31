@@ -14,25 +14,34 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 /**
- * Exercise 7. Wire the screen to the ViewModel: obtain it with viewModel(), collect its state
- * lifecycle-aware with collectAsStateWithLifecycle(), and pass the state down while forwarding each
- * event (onQueryChange, onShowBookmarkedOnlyChange, onToggleBookmark) to the matching ViewModel
- * function. (Let Android Studio add the imports as you type.)
+ * Wire the screen to the ViewModel: obtain it with viewModel(), collect its state lifecycle-aware,
+ * and pass the state down while forwarding events up. This is the seam between UI and logic.
  */
 @Composable
 fun PostsRoute(modifier: Modifier = Modifier) {
-    TODO()
+    val vm: PostsViewModel = viewModel()
+    val state by vm.uiState.collectAsStateWithLifecycle()
+    PostsScreen(
+        state = state,
+        onQueryChange = vm::setQuery,
+        onShowBookmarkedOnlyChange = vm::setShowBookmarkedOnly,
+        onToggleBookmark = vm::toggleBookmark,
+        modifier = modifier,
+    )
 }
 
 /**
  * A fully STATELESS screen: it renders [state] and reports events. It searches and filters the posts
- * and lets you bookmark each one. Provided for you; you build the ViewModel behind it and the wiring
- * above. Lab 5 adds a loading spinner and an error state when the posts come from the network.
+ * and lets you bookmark each one. Lab 5 adds a loading spinner and an error state when the posts come
+ * from the network.
  */
 @Composable
 fun PostsScreen(
